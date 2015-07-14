@@ -6,16 +6,19 @@ import numpy as np
 import quantecon as qe
 import matplotlib.pyplot as plt
 from numpy import searchsorted
+from scipy.stats import binom
 
 def kmr_markov_matrix(p, N, epsilon,mode=0):
     """
     Generate the transition probability matrix for the KMR dynamics with
     two acitons.
     """
-
     if mode == 0:
         P = seq_rev(p, N, epsilon)
         return P.seq_rev()
+    elif mode == 1:
+        P = sim_rev(p, N, epsilon)
+        return P.sim_rev()
     else:
         return 0
 
@@ -69,13 +72,46 @@ class seq_rev():
         seq_P = P
         return seq_P
 
+
+class sim_rev():
+
+    def __init__(self, p, N, epsilon):
+        init_P = np.zeros((N+1, N+1), dtype=float)
+        self.emp_P = init_P
+        self.prb = p
+        self.num_p = N
+        self.irrg_chng = epsilon * 1/2
+        self.nrml_act = 1 - self.irrg_chng
+
+    def sim_rev(self):
+        N = self.num_p
+        P = self.emp_P
+        X = [i for i in range(N+1)]
+        for i in range(0,N+1):
+            i = float(i)
+            N2 = float(N)
+            k = i/N2
+            if k < self.prb:
+                pmf = binom.pmf(X, N, self.irrg_chng)
+                for k in range(N+1):
+                    P[i][k] = round(pmf[k], 5)
+            elif k == self.prb:
+                pmf = binom.pmf(X, N, 1/2)
+                for k in range(N+1):
+                    P[i][k] = round(pmf[k], 5)
+            else:
+                pmf = binom.pmf(X, N, self.nrml_act)
+                for k in range(N+1):
+                    P[i][k] = round(pmf[k], 5)
+        sim_P = P
+        return sim_P
+
 class KMR():
     """
     Class representing the KMR dynamics with two actions.
     """
-    def __init__(self, p, N, epsilon,mode=0):
-        if mode == 0:
-            self.p = kmr_markov_matrix(p, N, epsilon)
+    def __init__(self, p, N, epsilon, mode=0):
+        self.p = kmr_markov_matrix(p, N, epsilon, mode)
         self.mc = qe.MarkovChain(self.p)
         self.state = self.sample_path
         self.N = N
