@@ -7,6 +7,7 @@ import quantecon as qe
 import matplotlib.pyplot as plt
 from numpy import searchsorted
 from scipy.stats import binom
+from collections import Counter
 
 def kmr_markov_matrix(p, N, epsilon,mode=0):
     """
@@ -110,11 +111,14 @@ class KMR():
     """
     Class representing the KMR dynamics with two actions.
     """
-    def __init__(self, p, N, epsilon, mode=0):
+    def __init__(self, p, N, epsilon, mode=0, init=0, sample=10000):
         self.p = kmr_markov_matrix(p, N, epsilon, mode)
+        self.epsilon = epsilon
         self.mc = qe.MarkovChain(self.p)
         self.state = self.sample_path
         self.N = N
+        self.init = init
+        self.sample = sample
 
     def plot1(self):
         fig, ax = plt.subplots()
@@ -123,10 +127,15 @@ class KMR():
         show = plt.show()
         return show
 
-    def sample_path(self, init=0, sample_size=100000, plot=0):
+    def sample_path(self, init=False, sample_size=False, plot=0):
         """
         See Section: DocStrings below
         """
+        if init is False:
+            init = self.init
+
+        if sample_size is False:
+            sample_size = self.sample
 
         P = self.p
 
@@ -178,4 +187,41 @@ class KMR():
         for i in range(len(self.mc.stationary_distributions[0])):
             x.append(round(self.mc.stationary_distributions[0][i], 5))
         return x
-                     
+
+    def plot(self, typ=0):
+        max_y = self.sample
+        as_x = []
+        as_y = []
+        if  typ == 0:
+            k = self.sample_path(self)
+            counter = Counter(k).items()
+            counter
+
+            for i in range(len(counter)):
+                as_x.append(counter[i][0])
+
+            for i in range(len(counter)):
+                as_y.append(counter[i][1])
+
+        elif typ == 1:
+            k = self.compute_stationary_distribution()
+            for i in range(len(k)):
+                k[i] = k[i]*self.sample
+            as_x = [i for i in range((len(k)))]
+            as_y = [k[i] for i in range((len(k)))]
+
+        # 共通初期設定
+        plt.rc('font', **{'family': 'serif'})
+        # キャンバス
+        fig = plt.figure()
+        # プロット領域（1x1分割の1番目に領域を配置せよという意味）
+        ax = fig.add_subplot(111)
+        ax.bar(as_x,as_y)
+        # X, Y方向の表示範囲
+        ax.set_xlim(0, self.N+1)
+        ax.set_ylim(0, max_y)
+        # タイトル
+        ax.set_title('Histogram', size=16)
+        ax.set_xlabel('time', size=14)
+        ax.set_ylabel('Frequency', size=14)
+        return plt.show()
