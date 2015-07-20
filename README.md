@@ -13,5 +13,5 @@ Kandori-Mailath-Rob (KMR) の確率進化モデルのシミュレーション．
 * {X\_t} の定常分布を求めてヒストグラムにする．
   epsilon を小さくしていって，定常分布の変化の様子を見る．
 
-[実行結果](http://nbviewer.ipython.org/github/NlGG/KMR/blob/master/show.ipynb)
+[実行結果](http://nbviewer.ipython.org/github/NlGG/KMR/blob/master/KMR.ipynb)
 
