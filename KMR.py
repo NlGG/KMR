@@ -16,15 +16,15 @@ from scipy.stats import binom
 from collections import Counter
 from quantecon import mc_tools
 
-def kmr_markov_matrix(p, N, epsilon,mode=0):
+def kmr_markov_matrix(p, N, epsilon,mode="seq"):
     """
     Generate the transition probability matrix for the KMR dynamics with
     two acitons.
     """
-    if mode == 0:
+    if mode is "seq":
         P = SeqRev(p, N, epsilon)
         return P.seq_rev()
-    elif mode == 1:
+    elif mode is "sim":
         P = SimRev(p, N, epsilon)
         return P.sim_rev()
     else:
@@ -113,11 +113,15 @@ class SimRev():
         sim_P = P
         return sim_P
 
+def mc_sample_path(P, init, sample_size):
+    return mc_tools.mc_sample_path(P, init, sample_size)
+
+
 class KMR():
     """
     Class representing the KMR dynamics with two actions.
     """
-    def __init__(self, p, N, epsilon, mode=0, init=0, sample=10000):
+    def __init__(self, p, N, epsilon, mode="seq", init=0, sample=10000):
         self.p = kmr_markov_matrix(p, N, epsilon, mode)
         self.epsilon = epsilon
         self.mc = qe.MarkovChain(self.p)
@@ -140,11 +144,11 @@ class KMR():
 
         if init is None:
             init = self.init
-            
+
         if sample_size is None:
             sample_size = self.sample
 
-        X = self.mc_sample_path(init, ts_length)
+        X = self.mc.simulate(sample_size, init)
 
         if plot == 1:
             fig, ax = plt.subplots()
@@ -174,12 +178,17 @@ class KMR():
             x.append(round(self.mc.stationary_distributions[0][i], 5))
         return x
 
-    def plot(self, typ=0):
+    def plot(self, typ="samp", init=None, sample_size=None):
+        if init is None:
+            init = self.init
+
+        if sample_size is None:
+            sample_size = self.sample
         max_y = self.sample
         as_x = []
         as_y = []
-        if  typ == 0:
-            sp = self.sample_path(self)
+        if  typ is "samp":
+            sp = self.sample_path(init, sample_size)
             counter = Counter(sp).items()
             counter
 
@@ -189,16 +198,14 @@ class KMR():
             for i in range(len(counter)):
                 as_y.append(counter[i][1])
 
-        elif typ == 1:
-            k = self.compute_stationary_distribution()
-            for i in range(len(k)):
+        elif typ == "stat":
+            sp = self.compute_stationary_distribution()
+            for i in range(len(sp)):
                 sp[i] = sp[i]*self.sample
             as_x = [i for i in range((len(sp)))]
             as_y = [sp[i] for i in range((len(sp)))]
 
-        # 共通初期設定
         plt.rc('font', **{'family': 'serif'})
-        # キャンバス
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.bar(as_x,as_y)
