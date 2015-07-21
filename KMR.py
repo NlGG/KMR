@@ -1,13 +1,3 @@
-# coding: utf-8
-
-"""
-Author:
-KMR (Kandori-Mailath-Rob) Model
-"""
-"""
-Author:
-KMR (Kandori-Mailath-Rob) Model
-"""
 import numpy as np
 import quantecon as qe
 import matplotlib.pyplot as plt
@@ -16,7 +6,15 @@ from scipy.stats import binom
 from collections import Counter
 from quantecon import mc_tools
 
-def kmr_markov_matrix(p, N, epsilon,mode="seq"):
+# coding: utf-8
+
+"""
+Author:Nigg
+KMR (Kandori-Mailath-Rob) Model
+"""
+
+
+def kmr_markov_matrix(p, N, epsilon, mode="seq"):
     """
     Generate the transition probability matrix for the KMR dynamics with
     two acitons.
@@ -29,6 +27,7 @@ def kmr_markov_matrix(p, N, epsilon,mode="seq"):
         return P.sim_rev()
     else:
         return 0
+
 
 class SeqRev():
 
@@ -70,7 +69,7 @@ class SeqRev():
         P[0][1] = self.irrg_chng
         P[N][N-1] = self.irrg_chng
         P[0][0], P[N][N] = 1 - P[0][1], 1 - P[N][N-1]
-        for i in range(1,N):
+        for i in range(1, N):
             i = float(i)
             get1p = i/N
             get0p = (N-i)/N
@@ -79,6 +78,7 @@ class SeqRev():
             P[i][i] = 1.0 - P[i][i-1] - P[i][i+1]
         seq_P = P
         return seq_P
+
 
 class SimRev():
 
@@ -94,7 +94,7 @@ class SimRev():
         N = self.num_p
         P = self.emp_P
         X = [i for i in range(N+1)]
-        for i in range(0,N+1):
+        for i in range(0, N+1):
             i = float(i)
             N2 = float(N)
             k = i/N2
@@ -112,6 +112,7 @@ class SimRev():
                     P[i][k] = round(pmf[k], 5)
         sim_P = P
         return sim_P
+
 
 def mc_sample_path(P, init, sample_size):
     return mc_tools.mc_sample_path(P, init, sample_size)
@@ -187,31 +188,30 @@ class KMR():
         max_y = self.sample
         as_x = []
         as_y = []
-        if  typ is "samp":
+        if typ is "samp":
             sp = self.sample_path(init, sample_size)
             counter = Counter(sp).items()
             counter
-
             for i in range(len(counter)):
                 as_x.append(counter[i][0])
-
             for i in range(len(counter)):
                 as_y.append(counter[i][1])
-
         elif typ == "stat":
             sp = self.compute_stationary_distribution()
             for i in range(len(sp)):
                 sp[i] = sp[i]*self.sample
             as_x = [i for i in range((len(sp)))]
             as_y = [sp[i] for i in range((len(sp)))]
-
         plt.rc('font', **{'family': 'serif'})
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.bar(as_x,as_y)
+        ax.bar(as_x, as_y)
         ax.set_xlim(0, self.N+1)
         ax.set_ylim(0, max_y)
-        ax.set_title('Histogram', size=16)
+        if typ is "samp":
+            ax.set_title('SamplePath', size=16)
+        elif typ == "stat":
+            ax.set_title('StationaryDistribution', size=16)
         ax.set_xlabel('State', size=14)
         ax.set_ylabel('Number', size=14)
         return plt.show()
