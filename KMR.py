@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import numpy as np
 import quantecon as qe
 import matplotlib.pyplot as plt
@@ -6,7 +8,6 @@ from scipy.stats import binom
 from collections import Counter
 from quantecon import mc_tools
 
-# coding: utf-8
 
 """
 Author:Nigg
